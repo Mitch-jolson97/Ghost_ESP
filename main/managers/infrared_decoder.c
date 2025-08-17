@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <esp_log.h>
+#include <inttypes.h>
 
 
 static const char* TAG = "IR_DECODER";
@@ -294,11 +295,11 @@ InfraredDecodedMessage* infrared_decoder_decode(InfraredDecoderContext* decoder,
             // Reset decoder on error to prevent state corruption
             infrared_common_decoder_reset(common_decoder);
         } else if (status == InfraredDecoderStatusOk) {
-            ESP_LOGD(TAG, "Protocol %d accepted timing - level=%d, timing=%luµs, databit_cnt=%d", i, level, timing, common_decoder->databit_cnt);
+            ESP_LOGD(TAG, "Protocol %d accepted timing - level=%d, timing=%" PRIu32 "µs, databit_cnt=%" PRIu32, i, level, (uint32_t)timing, (uint32_t)common_decoder->databit_cnt);
         }
         
         if (status == InfraredDecoderStatusReady) {
-            ESP_LOGD(TAG, "Protocol %d ready for interpretation, databit_cnt=%d", i, common_decoder->databit_cnt);
+            ESP_LOGD(TAG, "Protocol %d ready for interpretation, databit_cnt=%" PRIu32, i, (uint32_t)common_decoder->databit_cnt);
             if (common_decoder->protocol->interpret && common_decoder->protocol->interpret(common_decoder)) {
                 decoder->last_message = common_decoder->message;
                 ESP_LOGI(TAG, "Decoded %s: addr=0x%08lX cmd=0x%08lX repeat=%d (databit_cnt=%d)", 
@@ -309,7 +310,7 @@ InfraredDecodedMessage* infrared_decoder_decode(InfraredDecoderContext* decoder,
                         common_decoder->databit_cnt);
                 return &decoder->last_message;
             } else {
-                ESP_LOGD(TAG, "Protocol %d interpretation failed, databit_cnt=%d", i, common_decoder->databit_cnt);
+                ESP_LOGD(TAG, "Protocol %d interpretation failed, databit_cnt=%" PRIu32, i, (uint32_t)common_decoder->databit_cnt);
             }
         }
     }
@@ -388,15 +389,15 @@ static InfraredDecoderStatus infrared_common_decode_bits(InfraredCommonDecoder* 
                 // Long low timing - check if we're ready for any protocol variant
                 for (size_t i = 0; i < 4 && decoder->protocol->databit_len[i]; ++i) {
                     if (decoder->protocol->databit_len[i] == decoder->databit_cnt) {
-                        ESP_LOGD(TAG, "min_split_time detected: timing=%luµs > %luµs, databit_cnt=%d matches variant %zu",
-                               timing, timings->min_split_time, decoder->databit_cnt, i);
+                        ESP_LOGD(TAG, "min_split_time detected: timing=%" PRIu32 "µs > %" PRIu32 "µs, databit_cnt=%" PRIu32 " matches variant %zu", 
+                            (uint32_t)timing, (uint32_t)timings->min_split_time, (uint32_t)decoder->databit_cnt, i);
                         return InfraredDecoderStatusReady;
                     }
                 }
             } else if (decoder->protocol->databit_len[0] == decoder->databit_cnt) {
                 // Short low timing for longest protocol - signal is longer than expected
-                ESP_LOGD(TAG, "Signal longer than expected: timing=%luµs <= %luµs, databit_cnt=%d",
-                       timing, timings->min_split_time, decoder->databit_cnt);
+                ESP_LOGD(TAG, "Signal longer than expected: timing=%" PRIu32 "µs <= %" PRIu32 "µs, databit_cnt=%" PRIu32,
+                    (uint32_t)timing, (uint32_t)timings->max_signal_len, (uint32_t)decoder->databit_cnt);
                 return InfraredDecoderStatusError;
             }
         }
@@ -438,7 +439,7 @@ InfraredDecodedMessage* infrared_common_decoder_check_ready_internal(InfraredCom
     }
 
     if (found_length && decoder->protocol->interpret && decoder->protocol->interpret(decoder)) {
-        ESP_LOGD(TAG, "Interpretation successful for databit_cnt=%d", decoder->databit_cnt);
+        ESP_LOGD(TAG, "Interpretation successful for databit_cnt=%" PRIu32, (uint32_t)decoder->databit_cnt)
         decoder->databit_cnt = 0;
         message = &decoder->message;
         if (decoder->protocol->decode_repeat) {
@@ -447,7 +448,7 @@ InfraredDecodedMessage* infrared_common_decoder_check_ready_internal(InfraredCom
             decoder->state = InfraredCommonDecoderStateWaitPreamble;
         }
     } else {
-        ESP_LOGD(TAG, "Interpretation failed: found_length=%d, databit_cnt=%d", found_length, decoder->databit_cnt);
+        ESP_LOGD(TAG, "Interpretation failed: found_length=%d, databit_cnt=%" PRIu32, found_length, (uint32_t)decoder->databit_cnt);
     }
 
     return message;
