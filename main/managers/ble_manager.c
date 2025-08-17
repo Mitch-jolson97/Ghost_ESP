@@ -1780,7 +1780,6 @@ void ble_start_airtag_scanner(void) {
     disc_params.limited = 0;
     disc_params.passive = 0; // active scanning to get scan response
     disc_params.filter_duplicates = 0; // deliver duplicates
-    disc_params.disable_observer_mode = 0;
 
     int rc = ble_gap_disc(BLE_OWN_ADDR_PUBLIC, BLE_HS_FOREVER, &disc_params, ble_gap_event_general, NULL);
     if (rc != 0) {
