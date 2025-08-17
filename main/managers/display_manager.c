@@ -746,7 +746,12 @@ void display_manager_init(void) {
 #endif
       .duty = 0, // Set initial duty to 0
       .hpoint = 0,
+#if (ESP_IDF_VERSION_MAJOR > 5) || \
+      (ESP_IDF_VERSION_MAJOR == 5 && ESP_IDF_VERSION_MINOR >= 2)
+# ifdef LEDC_SLEEP_MODE_KEEP_ALIVE
       .sleep_mode = LEDC_SLEEP_MODE_KEEP_ALIVE,
+# endif
+#endif
   };
   ledc_channel_config(&ledc_channel);
 
