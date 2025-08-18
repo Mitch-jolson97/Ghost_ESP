@@ -2443,6 +2443,9 @@ void handle_chip_info_cmd(int argc, char **argv) {
         case CHIP_ESP32P4:
             model_name = "ESP32-P4";
             break;
+        case CHIP_ESP32C5:
+            model_name = "ESP32-C5";
+            break;
         case CHIP_ESP32C61:
             model_name = "ESP32-C61";
             break;
